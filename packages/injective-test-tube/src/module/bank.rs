@@ -1,6 +1,6 @@
 use injective_std::types::cosmos::bank::v1beta1::{
     MsgSend, MsgSendResponse, QueryAllBalancesRequest, QueryAllBalancesResponse,
-    QueryBalanceRequest, QueryBalanceResponse, QueryTotalSupplyRequest, QueryTotalSupplyResponse,
+    QueryBalanceRequest, QueryBalanceResponse, QueryTotalSupplyRequest, QueryTotalSupplyResponse, QuerySupplyOfRequest, QuerySupplyOfResponse,
 };
 use test_tube_inj::{fn_execute, fn_query};
 
@@ -36,12 +36,16 @@ where
     fn_query! {
         pub query_total_supply ["/cosmos.bank.v1beta1.Query/TotalSupply"]: QueryTotalSupplyRequest => QueryTotalSupplyResponse
     }
+
+    fn_query! {
+        pub query_supply_of ["/cosmos.bank.v1beta1.Query/SupplyOf"]: QuerySupplyOfRequest => QuerySupplyOfResponse
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::Coin;
-    use injective_std::types::cosmos::bank::v1beta1::{MsgSend, QueryBalanceRequest};
+    use injective_std::types::cosmos::bank::v1beta1::{MsgSend, QueryBalanceRequest, QuerySupplyOfRequest};
     use injective_std::types::cosmos::base::v1beta1::Coin as BaseCoin;
 
     use crate::{Account, Bank, InjectiveTestApp};
@@ -82,5 +86,18 @@ mod tests {
             &signer,
         )
         .unwrap();
+    }
+
+    #[test]
+    fn query_supply_of() {
+        let app = InjectiveTestApp::new();
+        let bank = Bank::new(&app);
+
+        let response = bank
+            .query_supply_of(&QuerySupplyOfRequest {
+                denom: "inj".to_string(),
+            })
+            .unwrap();
+        assert_eq!(response.amount.unwrap().amount, 100000003059726u128.to_string());
     }
 }
